@@ -1,6 +1,8 @@
 package game;
 
 import game.View.GameMenu;
+import game.View.GameWindow;
+
 import javax.swing.*;
 
 /**
@@ -8,7 +10,8 @@ import javax.swing.*;
  */
 public class Main {
     public static void main(String[] args) {
-        new GameMenu();
+//        new GameMenu();
+        new GameWindow();
 
 //            String[] options = new String[] {"Yes", "No", "Maybe", "Cancel"};
 //            int response = JOptionPane.showOptionDialog(null, "Message", "Title",
