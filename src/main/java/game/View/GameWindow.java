@@ -15,7 +15,10 @@ public class GameWindow extends JPanel implements Runnable {
     String startTime;
     int FPS = 60;
     boolean running;
+    ClockELement gameClock;
+    TileManager tM = new TileManager(this);
     public GameWindow(){
+
         JFrame gameWindow = new JFrame("Tetris");
 //        try {
 //            UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
@@ -58,6 +61,14 @@ public class GameWindow extends JPanel implements Runnable {
                     timer.cancel();
             }
         }, 0, 1000);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        //test
+        gameClock = new ClockELement();
 
         double drawInterval = 1000000000/FPS;
         double nextDrawTime = System.nanoTime() + drawInterval;
@@ -88,6 +99,7 @@ public class GameWindow extends JPanel implements Runnable {
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
+        tM.paintClockElement(g, gameClock.currentTimeSec);
 
         //todo
 
