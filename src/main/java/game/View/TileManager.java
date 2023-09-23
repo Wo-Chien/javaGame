@@ -11,6 +11,8 @@ public class TileManager {
     }
     public void paintClockElement(Graphics g, int time){
         g.setColor(Color.white);
-        g.drawString(String.valueOf(time), 200, 200);
+        g.setFont(new Font("Microsoft YaHei", Font.BOLD, 30));
+        g.drawString(String.valueOf(time), 480, 60);
+//        g.drawRect(20, 20, 100, 100);
     }
 }

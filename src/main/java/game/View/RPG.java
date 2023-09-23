@@ -1,24 +1,16 @@
 package game.View;
 
+//import rpg.Controller.PlaneController;
+//import rpg.Models.Grid;
+//import rpg.Models.Plane;
 import javax.swing.*;
 import java.awt.*;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.logging.Logger;
 
-/**
- * the actual game window
- * initiated via GameMenu instance
- */
-public class GameWindow extends JPanel implements Runnable {
-    String startTime;
-    int FPS = 60;
-    boolean running;
-    ClockELement gameClock;
-    TileManager tM = new TileManager(this);
-    JToggleButton btTogglePause, loggingBt; JTextField HP_text; JToggleButton displayInventory;
 
+public class RPG extends JPanel implements Runnable {
+    //window settings
     public final int cols = 20;
     public final int rows = 15;
     int originalTileSize = 16;
@@ -26,81 +18,99 @@ public class GameWindow extends JPanel implements Runnable {
     public final int finalTileSize = originalTileSize * scale;
     int screenWidth = cols * finalTileSize;
     int screenHeight = rows * finalTileSize;
+    int FPS = 60;
+    // other variables
+    long time_begin;
+    boolean running, paused;
+    public boolean logging = true;
+    int paused_checker = 0;
 
-    public GameWindow(){
-//        gameWindow.setSize(new Dimension(1000, 600));
-////        gameWindow.setLayout(new BorderLayout());
-//        gameWindow.setLayout(new FlowLayout());
-//        gameWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-//
-//
-//        gameWindow.setLocationRelativeTo(null);
-//        gameWindow.getContentPane().setBackground(Color.black);
-//        gameWindow.setVisible(true);
+    // swing elements
+    JToggleButton btTogglePause, loggingBt; JTextField HP_text; JToggleButton displayInventory;
 
+    // other classes
+//    KeyHandler keyHandler = new KeyHandler();
+//    Plane plane = new Plane(this);
+//    PlaneController controller = new PlaneController(keyHandler, plane);
+//    TileManager tileManager = new TileManager(this);
+    private static final Logger rpg_logger = Logger.getLogger(RPG.class.getName());
+
+    public RPG(){
+        // time
+        if (logging) {
+            rpg_logger.info("game start at " + new Date());
+        }
         //set the window and panels
-        JFrame gameWindow = new JFrame("Tetris");
+        JFrame gameWindow = new JFrame("Game");
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException |
                  IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-//        gameWindow.setPreferredSize(new Dimension(screenWidth, screenHeight + (int)(1.5*finalTileSize)));
-        gameWindow.setSize(new Dimension(1000, 600));
-
+        gameWindow.setPreferredSize(new Dimension(screenWidth, screenHeight + (int)(1.5*finalTileSize)));
         gameWindow.setLayout(new BorderLayout());
-
         gameWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //panel with pause and quit buttons
         JPanel buttonPanel = new JPanel();
-
-        JButton btQuit = new JButton("Quit");
-        btQuit.setFocusable(false);
-        btQuit.addActionListener(e -> System.exit(0));
-
+        JButton bt = new JButton("Quit");
+        bt.setFocusable(false);
+        bt.addActionListener(e -> System.exit(0));
         btTogglePause = new JToggleButton("Pause");
         btTogglePause.setFocusable(false);
         btTogglePause.createToolTip();
+
+//        HP_text = new JTextField(String.valueOf(plane.getPlayer().getHP()));
+//        HP_text.setPreferredSize(new Dimension(35, 30));
+//        HP_text.setEditable(false);
+
+        JLabel hp_label = new JLabel("Health points");
+        hp_label.setLabelFor(HP_text);
+
+        displayInventory = new JToggleButton("display inventory");
+        displayInventory.setFocusable(false);
+        displayInventory.setSelected(true);
 
         loggingBt = new JToggleButton("logging");
         loggingBt.setFocusable(false);
         loggingBt.setSelected(true);
 
         buttonPanel.setLayout(new FlowLayout());
-        buttonPanel.add(btQuit);
+        buttonPanel.add(bt);
         buttonPanel.add(btTogglePause);
+//        buttonPanel.add(HP_text);
+        buttonPanel.add(hp_label);
+        buttonPanel.add(displayInventory);
         buttonPanel.add(loggingBt);
 
         // RPG JPanel / the game panel itself
         setSize(screenWidth, screenHeight);
-//        setBackground(new Color(44, 9, 74));
-        setBackground(Color.darkGray);
+        setBackground(Color.black);
         setDoubleBuffered(true);
-//        addKeyListener(keyHandler); // todo add key handler
+//        addKeyListener(keyHandler);
         setFocusable(true);
 
         // add button panel, the canvas and pack
         gameWindow.add(buttonPanel, BorderLayout.PAGE_END);
         gameWindow.add(this, BorderLayout.CENTER);
-//        gameWindow.pack();
+        gameWindow.pack();
         gameWindow.setLocationRelativeTo(null);
         gameWindow.setVisible(true);
 
-        startGame();
+        start_the_game();
     }
 
-    private void startGame(){
+    /**
+     * notes the current time, retrieves laoded grid from plane starts a new thread, that runs the main update clock (updates everything except enemies)
+     */
+    public void start_the_game(){
         running = true;
+        time_begin = System.currentTimeMillis();
 
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        Date date = new Date();
-        startTime = formatter.format(date);
-        gameClock = new ClockELement();
+        Thread t = new Thread(this);
+        t.start();
 
-        Thread gameThread = new Thread(this);
-        gameThread.start();
     }
 
     @Override
@@ -131,15 +141,17 @@ public class GameWindow extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * override of a JComponent method, is called with repaint()
+     * calls draw methods from TileManager
+     * @param g the <code>Graphics</code> object to protect
+     */
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
 
-//        System.out.println("painting");
+        System.out.println("painting");
 
-        if (gameClock != null) {
-            tM.paintClockElement(g2, gameClock.currentTimeSec);
-        }
         g.dispose();
         g2.dispose();
     }
@@ -149,6 +161,6 @@ public class GameWindow extends JPanel implements Runnable {
      * if not paused executes update method from controller, and updates the display of player HP
      */
     private void update(){ // update still runs even when paused, it just doesn't reach controller, just checks the pause button being toggled
-//        System.out.println("updating");
+        System.out.println("updating");
     }
 }

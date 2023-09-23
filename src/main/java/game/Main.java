@@ -2,7 +2,7 @@ package game;
 
 import game.View.GameMenu;
 import game.View.GameWindow;
-
+import game.View.RPG;
 import javax.swing.*;
 
 /**
